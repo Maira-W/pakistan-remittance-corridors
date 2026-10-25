@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pakistan remittance corridors</title>
+<script src="__PLOTLY__" charset="utf-8"></script>
+<style>
+  :root { --navy:#1F3B57; --teal:#2A9D8F; --orange:#E76F51; --ink:#1F2937; --muted:#5B6575; --line:#D9DEE5; --wash:#F3F5F8; --card:#fff; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#E6EAF0; --muted:#A5B0BF; --line:#2F3A48; --wash:#161C24; --card:#1D2530; --navy:#8FB4DA; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:"Segoe UI",system-ui,Arial,sans-serif; color:var(--ink); background:var(--wash); line-height:1.45; }
+  header { background:#1F3B57; color:#fff; padding:18px 5vw 0; }
+  header h1 { margin:0; font-size:1.55rem; }
+  header p { margin:4px 0 12px; color:#C9D6E4; font-size:.95rem; max-width:62rem; }
+  nav { display:flex; gap:4px; flex-wrap:wrap; }
+  nav button { border:0; background:transparent; color:#C9D6E4; padding:9px 14px; font:inherit; cursor:pointer; border-radius:8px 8px 0 0; }
+  nav button[aria-selected="true"] { background:var(--wash); color:var(--navy); font-weight:600; }
+  main { padding:18px 5vw 40px; max-width:1200px; margin:auto; }
+  section[hidden] { display:none; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:16px; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .kpi b { display:block; font-size:1.6rem; color:var(--navy); }
+  .kpi span { color:var(--muted); font-size:.85rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:16px; }
+  .card h2 { margin:0 0 4px; font-size:1.1rem; } .card p.sub { margin:0 0 8px; color:var(--muted); font-size:.9rem; }
+  .grid2 { display:grid; grid-template-columns:repeat(auto-fit,minmax(380px,1fr)); gap:16px; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  th, td { padding:6px 8px; border-bottom:1px solid var(--line); text-align:right; } th:first-child, td:first-child, th.l, td.l { text-align:left; }
+  th { color:var(--muted); font-weight:600; cursor:pointer; white-space:nowrap; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:99px; font-size:.78rem; color:#fff; }
+  .t1 { background:var(--navy); } .t2 { background:var(--teal); } .t3 { background:#8A94A3; }
+  select, button.act { font:inherit; padding:6px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); }
+  .note { color:var(--muted); font-size:.85rem; }
+  .callout { border-left:4px solid var(--teal); background:var(--card); padding:10px 14px; border-radius:0 8px 8px 0; margin-bottom:16px; }
+  footer { color:var(--muted); font-size:.82rem; padding:0 5vw 30px; max-width:1200px; margin:auto; }
+  a { color:var(--navy); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Pakistan remittance corridors</h1>
+  <p>Where the money sent home comes from, how that is changing, and when it arrives. State Bank of Pakistan data, million US dollars.</p>
+  <nav role="tablist" id="tabs"></nav>
+</header>
+<main>
+  <section id="overview"></section>
+  <section id="corridors" hidden></section>
+  <section id="when" hidden></section>
+  <section id="plan" hidden></section>
+  <section id="method" hidden></section>
+</main>
+<footer>Sources: SBP country-wise workers' remittances workbook (monthly, July 2018 to April 2024, Internet Archive copy) and SBP Monthly Statistical Bulletin, August 2026, table 4.8. Code, memo and method: <a href="https://github.com/Maira-W/pakistan-remittance-corridors">github.com/Maira-W/pakistan-remittance-corridors</a>. MIT licence.</footer>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function () {
+  "use strict";
+  const D = JSON.parse(document.getElementById("data").textContent);
+  const S = D.stats;
+  const $ = id => document.getElementById(id);
+  const f0 = x => Math.round(x).toLocaleString("en-US"), f1 = x => x.toFixed(1), pct = (x, d = 1) => x.toFixed(d) + "%";
+  const sign = x => (x >= 0 ? "+" : "") + x.toFixed(1) + "%";
+  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const ink = dark ? "#E6EAF0" : "#1F2937", grid = dark ? "#2F3A48" : "#E6EAF0";
+  const layout = (extra) => Object.assign({ margin: { t: 10, r: 14, b: 50, l: 60 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+    font: { color: ink, size: 12 }, xaxis: { gridcolor: grid }, yaxis: { gridcolor: grid } }, extra || {});
+  const cfg = { displayModeBar: false, responsive: true };
+  const regionColour = r => D.colours[r];
+  const MONTHNAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  // ---- tabs
+  const tabs = [["overview", "The big picture"], ["corridors", "Corridors"], ["when", "When money arrives"], ["plan", "Where to focus"], ["method", "Method and limits"]];
+  const rendered = {};
+  const renderers = {};
+  tabs.forEach(([id, label]) => {
+    const b = document.createElement("button"); b.textContent = label; b.setAttribute("role", "tab"); b.id = "t-" + id; b.dataset.tab = id;
+    b.addEventListener("click", () => show(id)); $("tabs").appendChild(b);
+  });
+  function show(id, quiet) {
+    tabs.forEach(([t]) => { $(t).hidden = t !== id; $("t-" + t).setAttribute("aria-selected", t === id); });
+    if (!rendered[id]) { renderers[id](); rendered[id] = true; }
+    if (!quiet) history.replaceState(null, "", "#" + id);
+    window.dispatchEvent(new Event("resize"));
+  }
+
+  // ---- overview
+  renderers.overview = function () {
+    const t = S.fy_totals_usd_m;
+    $("overview").innerHTML = `
+      <div class="kpis">
+        <div class="kpi"><b>$${(t.FY26 / 1000).toFixed(1)} bn</b><span>received in FY26 (${sign(S.growth_fy26_pct)} on FY25)</span></div>
+        <div class="kpi"><b>${pct(S.gcc_share_fy26_pct, 0)}</b><span>from the Gulf (${pct(S.gcc_share_fy20_pct, 0)} in FY20)</span></div>
+        <div class="kpi"><b>${pct(S.top3_share_fy26_pct, 0)}</b><span>from ${S.top3.join(", ")}</span></div>
+        <div class="kpi"><b>${sign(S.eid.pooled.before_eid.uplift_pct)}</b><span>typical lift in the 3 weeks before Eid (uncertain)</span></div>
+      </div>
+      <div class="callout"><b>In short.</b> Pakistan receives about $${(t.FY26 / 12 / 1000).toFixed(1)} bn a month. Saudi Arabia, the UAE and the UK send the most. The Gulf still dominates, though its share is down
+        from ${pct(S.gcc_share_fy20_pct, 0)} in FY20 as Europe and North America grew. Money arrives in bigger waves before Eid, mostly from the UK, USA and Oman.</div>
+      <div class="grid2">
+        <div class="card"><h2>Who sends it</h2><p class="sub">Share of FY26 remittances by corridor</p><div id="o-shares" style="height:520px"></div></div>
+        <div class="card"><h2>Where from, over time</h2><p class="sub">Share by region, fiscal years (FY24 is missing at country level)</p><div id="o-regions" style="height:380px"></div>
+          <p class="note">Total by year (million US dollars): ${Object.entries(t).map(([k, v]) => k + " " + f0(v)).join(" · ")}.</p></div>
+      </div>`;
+    const s = D.summary.slice().sort((a, b) => a.fy26_usd_m - b.fy26_usd_m);
+    Plotly.newPlot("o-shares", [{ type: "bar", orientation: "h", y: s.map(r => r.corridor), x: s.map(r => r.share_fy26_pct),
+      marker: { color: s.map(r => regionColour(r.region)) }, text: s.map(r => r.share_fy26_pct.toFixed(1) + "%  (" + sign(r.growth_fy26_pct) + ")"),
+      textposition: "outside", cliponaxis: false, hovertemplate: "<b>%{y}</b><br>%{x:.1f}% of FY26<extra></extra>" }],
+      layout({ margin: { t: 6, r: 90, b: 40, l: 100 }, xaxis: { title: "Share of FY26 (%)", gridcolor: grid } }), cfg);
+    const years = D.regions.map(r => r.fiscal_year);
+    Plotly.newPlot("o-regions", D.regionNames.map(n => ({ type: "bar", name: n, x: years, y: D.regions.map(r => r[n]), marker: { color: regionColour(n) },
+      hovertemplate: n + ": %{y:.1f}%<extra></extra>" })), layout({ barmode: "stack", yaxis: { title: "Share (%)", range: [0, 100], gridcolor: grid },
+      legend: { orientation: "h", y: -0.18 } }), cfg);
+  };
+
+  // ---- corridors table
+  renderers.corridors = function () {
+    $("corridors").innerHTML = `<div class="card"><h2>Every corridor</h2><p class="sub">Click a column to sort. FY25 and FY26 are SBP's annual figures; 'Growth FY20-FY24' is the yearly rate for July to April, the one window the monthly data cover every year.</p>
+      <div style="overflow-x:auto"><table id="ctable"></table></div></div>
+      <div class="card"><h2>One corridor over time</h2><p class="sub">Monthly remittances, million US dollars a day, July 2019 to April 2024</p>
+      <select id="c-pick" aria-label="Corridor"></select><div id="c-line" style="height:340px"></div></div>`;
+    const cols = [["corridor", "Corridor", s => s.corridor, true], ["region", "Region", s => s.region, true], ["fy26_usd_m", "FY26 ($m)", s => f0(s.fy26_usd_m)],
+      ["share_fy26_pct", "Share", s => pct(s.share_fy26_pct)], ["growth_fy26_pct", "Growth on FY25", s => sign(s.growth_fy26_pct)],
+      ["added_fy26_usd_m", "Added ($m)", s => (s.added_fy26_usd_m >= 0 ? "+" : "") + f0(s.added_fy26_usd_m)],
+      ["cagr_window_fy20_fy24_pct", "Growth FY20-FY24", s => sign(s.cagr_window_fy20_fy24_pct)], ["tier", "Tier", s => `<span class="pill ${s.tier.startsWith("Tier 1") ? "t1" : s.tier.startsWith("Tier 2") ? "t2" : "t3"}">${s.tier}</span>`, true]];
+    let key = "fy26_usd_m", asc = false;
+    function draw() {
+      const rows = D.summary.slice().sort((a, b) => (typeof a[key] === "string" ? a[key].localeCompare(b[key]) : a[key] - b[key]) * (asc ? 1 : -1));
+      $("ctable").innerHTML = "<tr>" + cols.map(c => `<th class="${c[3] ? "l" : ""}" data-k="${c[0]}">${c[1]}${c[0] === key ? (asc ? " ▲" : " ▼") : ""}</th>`).join("") + "</tr>" +
+        rows.map(r => "<tr>" + cols.map(c => `<td class="${c[3] ? "l" : ""}">${c[2](r)}</td>`).join("") + "</tr>").join("");
+      $("ctable").querySelectorAll("th").forEach(th => th.addEventListener("click", () => { const k = th.dataset.k; asc = k === key ? !asc : false; key = k; draw(); }));
+    }
+    draw();
+    const pick = $("c-pick"); pick.innerHTML = "<option>All corridors</option>" + D.summary.map(r => `<option>${r.corridor}</option>`).join("");
+    function line() {
+      const name = pick.value, y = name === "All corridors" ? D.totalPerDay : D.perDay[name];
+      Plotly.newPlot("c-line", [{ x: D.months.map(m => m + "-15"), y, type: "scatter", mode: "lines", line: { color: "#2A9D8F", width: 2.4 }, hovertemplate: "%{x|%b %Y}: %{y:.2f}<extra></extra>" }],
+        layout({ yaxis: { title: "Million US dollars a day", gridcolor: grid }, margin: { t: 10, r: 14, b: 40, l: 60 } }), cfg);
+    }
+    pick.addEventListener("change", line); line();
+  };
+
+  // ---- when
+  renderers.when = function () {
+    const e = S.eid.pooled.before_eid, p = S.placebo;
+    $("when").innerHTML = `
+      <div class="callout"><b>The Eid lift.</b> After taking out the long-run trend, remittances run about <b>${sign(e.uplift_pct)}</b> above normal in the three weeks before Eid
+        (95% range ${sign(e.lo_pct)} to ${sign(e.hi_pct)}, p = ${e.p.toFixed(2)}). When the same model is run on Eid dates moved by the same number of days, ${pct(p.share_of_shifts_as_large * 100, 0)} of made-up calendars find a lift this big.
+        So the lift is plausible and consistent with how remittances work, but five years of data cannot prove it for the total. For the UK, USA and Oman it is clearer.</div>
+      <div class="card"><h2>Month by month</h2><p class="sub">Daily average, with the 12-month trend and the Eid dates (green: Eid al-Fitr, purple: Eid al-Adha)</p><select id="w-pick" aria-label="Corridor"></select><div id="w-line" style="height:380px"></div></div>
+      <div class="grid2">
+        <div class="card"><h2>Which months are strong</h2><p class="sub">Average against the trend, by calendar month</p><div id="w-season" style="height:320px"></div></div>
+        <div class="card"><h2>Which corridors respond to Eid</h2><p class="sub">Extra remittances in the 21 days before Eid, with the 95% range</p><div id="w-eid" style="height:320px"></div></div>
+      </div>`;
+    const pick = $("w-pick"); pick.innerHTML = "<option>All corridors</option>" + D.eidByCorridor.map(r => `<option>${r.corridor}</option>`).join("");
+    function line() {
+      const name = pick.value, y = name === "All corridors" ? D.totalPerDay : D.perDay[name];
+      const traces = [{ x: D.months.map(m => m + "-15"), y, type: "scatter", mode: "lines", name: "Daily average", line: { color: "#1F3B57", width: 2.2 } }];
+      if (name === "All corridors") traces.push({ x: D.months.map(m => m + "-15"), y: D.trend, type: "scatter", mode: "lines", name: "12-month trend", line: { color: "#E76F51", dash: "dash", width: 1.8 } });
+      const shapes = [];
+      D.eidFitr.forEach(d => shapes.push({ type: "line", x0: d, x1: d, yref: "paper", y0: 0, y1: 1, line: { color: "#2A9D8F", width: 1.4 } }));
+      D.eidAdha.forEach(d => shapes.push({ type: "line", x0: d, x1: d, yref: "paper", y0: 0, y1: 1, line: { color: "#7B4FA3", width: 1.4 } }));
+      Plotly.newPlot("w-line", traces, layout({ shapes, yaxis: { title: "Million US dollars a day", gridcolor: grid }, legend: { orientation: "h", y: -0.15 },
+        xaxis: { range: ["2019-05-01", "2024-07-15"], gridcolor: grid } }), cfg);
+    }
+    pick.addEventListener("change", line); line();
+    Plotly.newPlot("w-season", [{ type: "bar", x: D.seasonal.map(r => MONTHNAMES[r.calendar_month - 1]), y: D.seasonal.map(r => r.index_pct_vs_trend),
+      marker: { color: D.seasonal.map(r => r.index_pct_vs_trend >= 0 ? "#2A9D8F" : "#9AA5B1") }, hovertemplate: "%{x}: %{y:+.1f}%<extra></extra>" }],
+      layout({ yaxis: { title: "% against trend", gridcolor: grid } }), cfg);
+    const rows = [{ corridor: "All corridors", uplift_pct: e.uplift_pct, lo_pct: e.lo_pct, hi_pct: e.hi_pct }].concat(D.eidByCorridor.slice().sort((a, b) => a.uplift_pct - b.uplift_pct));
+    Plotly.newPlot("w-eid", [{ type: "scatter", mode: "markers", y: rows.map(r => r.corridor), x: rows.map(r => r.uplift_pct),
+      error_x: { type: "data", symmetric: false, array: rows.map(r => r.hi_pct - r.uplift_pct), arrayminus: rows.map(r => r.uplift_pct - r.lo_pct), color: "#7B8794" },
+      marker: { size: 9, color: rows.map(r => r.corridor === "All corridors" ? "#1F3B57" : r.lo_pct > 0 ? "#2A9D8F" : "#9AA5B1") },
+      hovertemplate: "<b>%{y}</b><br>%{x:+.1f}%<extra></extra>" }],
+      layout({ xaxis: { title: "Extra in the 21 days before Eid (%)", zeroline: true, zerolinecolor: ink, gridcolor: grid }, margin: { t: 6, r: 14, b: 44, l: 90 } }), cfg);
+  };
+
+  // ---- plan
+  renderers.plan = function () {
+    const t1 = D.summary.filter(r => r.tier.startsWith("Tier 1")), t2 = D.summary.filter(r => r.tier.startsWith("Tier 2")), risers = D.summary.filter(r => r.fast_riser);
+    $("plan").innerHTML = `
+      <div class="card"><h2>Where a remittance product should focus first</h2>
+        <p class="sub">Tiers are by share of FY26 remittances: Tier 1 at least 8%, Tier 2 from 1% to 8%, Tier 3 under 1%.</p>
+        <table><tr><th class="l">Tier</th><th class="l">Corridors</th><th>Share of FY26</th></tr>
+          <tr><td class="l"><span class="pill t1">Tier 1: core</span></td><td class="l">${t1.map(r => r.corridor).join(", ")}</td><td>${pct(t1.reduce((a, r) => a + r.share_fy26_pct, 0))}</td></tr>
+          <tr><td class="l"><span class="pill t2">Tier 2: build</span></td><td class="l">${t2.map(r => r.corridor).join(", ")}</td><td>${pct(t2.reduce((a, r) => a + r.share_fy26_pct, 0))}</td></tr>
+        </table>
+        <p>Fast risers outside the core (growth ten points above the total, over $500 million): <b>${risers.map(r => r.corridor + " (" + sign(r.growth_fy26_pct) + ")").join(", ") || "none"}</b>.</p></div>
+      <div class="card"><h2>Planning calendar for the next two Eids</h2>
+        <p class="sub">Indicative extra remittances against trend in each month the three-week pre-Eid window touches, using FY26's average of $${f0(S.fy26_monthly_avg_usd_m)} million a month. The range is the 95% range of the estimate, so it is wide and includes zero: use it to plan capacity, not to forecast. Eid dates are approximate.</p>
+        <div style="overflow-x:auto"><table><tr><th class="l">Event</th><th class="l">Window</th><th class="l">Month</th><th>Share of window</th><th>Central</th><th>Range</th><th>Extra ($m, central)</th></tr>
+        ${D.calendar.map(r => `<tr><td class="l">${r.event}</td><td class="l">${r.window_start} to ${r.window_end}</td><td class="l">${r.month}</td><td>${(r.share_of_window_in_month * 100).toFixed(0)}%</td>
+          <td>${sign(r.central_uplift_pct)}</td><td>${sign(r.low_uplift_pct)} to ${sign(r.high_uplift_pct)}</td><td>${f0(r.central_extra_usd_m)}</td></tr>`).join("")}</table></div></div>
+      <div class="card"><h2>What to do with it</h2><ul>
+        <li><b>Build for the core first.</b> ${t1.map(r => r.corridor).join(", ")} carry ${pct(S.tier1_share_fy26_pct, 0)} of the money.</li>
+        <li><b>Do not rely on the Gulf alone.</b> Its share fell from ${pct(S.gcc_share_fy20_pct, 0)} to ${pct(S.gcc_share_fy23_pct, 0)} by FY23 and has been steady since; in FY26 Europe (${sign(S.region_growth_fy26_pct["Europe"])}) and Asia-Pacific (${sign(S.region_growth_fy26_pct["Asia-Pacific"])}) grew faster than the total.</li>
+        <li><b>Time campaigns and capacity to Eid, especially in the UK, USA and Oman,</b> where the lift is clearest. Expect January and February to be the quietest months.</li>
+        <li><b>Check against your own data.</b> These are country totals from the central bank, not customers of one provider.</li></ul></div>`;
+  };
+
+  // ---- method
+  renderers.method = function () {
+    $("method").innerHTML = `<div class="card"><h2>How this was made</h2><ol>
+      <li>Two State Bank of Pakistan files were downloaded and fingerprinted: a monthly workbook by country (July 2018 to April 2024) and the August 2026 bulletin's annual table.</li>
+      <li>The build step checks that countries add up to totals, groups add up to their members, and months add up to SBP's own fiscal-year totals. Any mismatch stops it.</li>
+      <li>Country figures use the remitter's original country from July 2019, so the analysis starts there (58 months).</li>
+      <li>To measure seasonality, each month's daily average is divided by a centred 12-month average. That leaves ${S.months_with_trend} months. A regression then asks how much higher that ratio is when the 21 days before Eid fall in the month.</li>
+      <li>A placebo test repeats the regression on Eid dates moved by 9 to 150 days, to see how unusual the real result is.</li></ol></div>
+      <div class="card"><h2>Limits</h2><ul>
+        <li>Monthly country data stop at April 2024, so the Eid analysis covers five years and about nine Eids. FY24 is missing at country level; FY25 and FY26 are annual only.</li>
+        <li>These are formal-channel remittances recorded by the central bank. Money sent through informal channels is not counted.</li>
+        <li>US dollars only: no rupee view, and no price or exchange-rate effects are modelled.</li>
+        <li>The Eid result is borderline for the total; corridor results are exploratory (ten were tested).</li>
+        <li>Associations, not causes. Big events (COVID-19, the 2023 reforms) also move the series.</li></ul></div>`;
+  };
+
+  const start = location.hash.replace("#", "");
+  show(tabs.some(t => t[0] === start) ? start : "overview", true);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+event,window_start,window_end,month,share_of_window_in_month,low_uplift_pct,low_extra_usd_m,central_uplift_pct,central_extra_usd_m,high_uplift_pct,high_extra_usd_m
+Eid al-Fitr 2027,2027-02-17,2027-03-09,February 2027,0.57,-0.8,-26,5.9,204,13.0,451
+Eid al-Fitr 2027,2027-02-17,2027-03-09,March 2027,0.43,-0.6,-20,4.4,152,9.6,333
+Eid al-Adha 2027,2027-04-26,2027-05-16,April 2027,0.24,-0.3,-11,2.4,84,5.2,181
+Eid al-Adha 2027,2027-04-26,2027-05-16,May 2027,0.76,-1.0,-35,7.9,275,17.7,613
