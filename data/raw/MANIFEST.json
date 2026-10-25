@@ -1,0 +1,18 @@
+{
+ "files": {
+  "sbp/Homeremit_Arch_2024-06-01.xlsx": {
+   "sha256": "909775b3bae84a86f374ee04fd8cc34e74da80a33ee702ad2cf4ac2762bca325",
+   "bytes": 191371,
+   "source": "http://web.archive.org/web/20240601163239id_/https://www.sbp.org.pk/Ecodata/Homeremit_Arch.xlsx",
+   "note": "SBP workbook 'Homeremit_Arch.xlsx', saved by the Internet Archive on 2024-06-01 (monthly, by country).",
+   "retrieved_utc": "2026-10-25T10:43Z"
+  },
+  "sbp/MSB_Aug2026_table_4_8_workers_remittances.pdf": {
+   "sha256": "041f061e726861edecca7c3446b9769f9d07f7dd5d8d906edef994f791561fa3",
+   "bytes": 195665,
+   "source": "https://www.sbp.org.pk/assets/document/publications/MSB-Complete-August-2026.pdf",
+   "note": "Page 107 (table 4.8) of the full bulletin, whose own SHA-256 was d1c2110e45bf145234473caf03a74e7b1385dfe736631376e4bef6a92ed5d42e; only this page is stored.",
+   "retrieved_utc": "2026-10-25T10:43Z"
+  }
+ }
+}

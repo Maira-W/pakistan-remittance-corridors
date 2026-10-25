@@ -1,0 +1,33 @@
+{
+ "workbook": {
+  "months": [
+   "2018-07-01",
+   "2024-04-01",
+   70
+  ],
+  "max_gap_leaves_vs_total": 2e-06,
+  "max_gap_U.A.E.": 2e-06,
+  "max_gap_Other GCC Countries": 1e-06,
+  "max_gap_EU Countries": 1e-06,
+  "fiscal_years_confirmed_against_sbp_totals": {
+   "FY19": 21739.4,
+   "FY20": 23132.3,
+   "FY21": 29449.9,
+   "FY22": 31278.8,
+   "FY23": 27332.8
+  }
+ },
+ "bulletin": {
+  "bulletin_total": {
+   "fy25": 38299.2,
+   "fy26": 41584.7,
+   "jul_fy26": 3214.5,
+   "jul_fy27p": 3631.0
+  },
+  "max_gap_fy25": 0.0,
+  "max_gap_fy26": 0.0,
+  "max_gap_jul_fy26": 0.2,
+  "max_gap_jul_fy27p": 0.3
+ },
+ "series_break": "Country figures use the remitter's original country from July 2019."
+}
